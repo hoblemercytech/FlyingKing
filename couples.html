@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+
+<html lang="en" style="background:#060e1f">
+
+<head>
+<meta charset="UTF-8"/>
+<meta name="color-scheme" content="dark">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Spark 🎲 Couples Game</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --navy: #041C4A;
+    --royal: #007BFF;
+    --sky: #00BFFF;
+    --silver: #C7CCD6;
+    --white: #FFFFFF;
+    --gold: #F5C842;
+    --rose: #FF6B9D;
+    --bg: #060e1f;
+  }
+
+*{ margin: 0; padding: 0; box-sizing: border-box; }
+
+html {
+  background: #060e1f !important;
+  color-scheme: dark;
+}
+
+body {
+font-family: ‘DM Sans’, sans-serif;
+background: var(–bg);
+color: var(–white);
+min-height: 100vh;
+overflow-x: hidden;
+display: flex;
+flex-direction: column;
+align-items: center;
+}
+
+/* Animated star background */
+.stars {
+position: fixed;
+inset: 0;
+pointer-events: none;
+z-index: 0;
+overflow: hidden;
+}
+.star {
+position: absolute;
+border-radius: 50%;
+background: white;
+animation: twinkle var(–d) infinite ease-in-out;
+opacity: 0;
+}
+@keyframes twinkle {
+0%,100% { opacity: 0; transform: scale(0.5); }
+50% { opacity: var(–op); transform: scale(1); }
+}
+
+.app {
+position: relative;
+z-index: 1;
+width: 100%;
+max-width: 520px;
+padding: 24px 20px 60px;
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 0;
+}
+
+/* ── LOGO ── */
+.logo {
+margin-top: 20px;
+text-align: center;
+}
+.logo h1 {
+font-family: ‘Playfair Display’, serif;
+font-size: 2.8rem;
+background: linear-gradient(135deg, var(–sky), var(–royal), var(–gold));
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+background-clip: text;
+letter-spacing: -1px;
+}
+.logo p {
+color: var(–silver);
+font-size: 0.85rem;
+letter-spacing: 3px;
+text-transform: uppercase;
+margin-top: 2px;
+}
+
+/* ── SCREENS ── */
+.screen {
+width: 100%;
+display: none;
+flex-direction: column;
+align-items: center;
+gap: 20px;
+animation: fadeUp 0.5s ease forwards;
+}
+.screen.active { display: flex; }
+
+@keyframes fadeUp {
+from { opacity: 0; transform: translateY(20px); }
+to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── SECTION TITLE ── */
+.section-title {
+font-family: ‘Playfair Display’, serif;
+font-size: 1.5rem;
+text-align: center;
+color: var(–white);
+margin-top: 32px;
+}
+.section-sub {
+font-size: 0.82rem;
+color: var(–silver);
+text-align: center;
+letter-spacing: 1px;
+}
+
+/* ── CATEGORY CARDS ── */
+.cat-grid {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 16px;
+width: 100%;
+margin-top: 8px;
+}
+.cat-card {
+position: relative;
+border-radius: 20px;
+padding: 28px 16px 24px;
+text-align: center;
+cursor: pointer;
+border: 2px solid transparent;
+transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
+overflow: hidden;
+user-select: none;
+}
+.cat-card::before {
+content: ‘’;
+position: absolute;
+inset: 0;
+opacity: 0;
+transition: opacity 0.3s;
+}
+.cat-card:hover { transform: translateY(-4px); }
+
+.cat-card.friendly {
+background: linear-gradient(145deg, #0a2550, #0d3070);
+box-shadow: 0 8px 32px rgba(0,123,255,0.2);
+}
+.cat-card.friendly::before {
+background: radial-gradient(circle at 50% 0%, rgba(0,191,255,0.15), transparent 70%);
+}
+.cat-card.friendly.selected {
+border-color: var(–sky);
+box-shadow: 0 0 30px rgba(0,191,255,0.4);
+}
+.cat-card.naughty {
+background: linear-gradient(145deg, #2a0a1a, #3d0d28);
+box-shadow: 0 8px 32px rgba(255,107,157,0.15);
+}
+.cat-card.naughty::before {
+background: radial-gradient(circle at 50% 0%, rgba(245,200,66,0.12), transparent 70%);
+}
+.cat-card.naughty.selected {
+border-color: var(–rose);
+box-shadow: 0 0 30px rgba(255,107,157,0.4);
+}
+.cat-card.selected::before { opacity: 1; }
+
+.cat-card .emoji { font-size: 2.6rem; display: block; margin-bottom: 10px; }
+.cat-card .cat-name {
+font-family: ‘Playfair Display’, serif;
+font-size: 1.1rem;
+color: var(–white);
+}
+.cat-card .cat-desc {
+font-size: 0.72rem;
+color: var(–silver);
+margin-top: 4px;
+line-height: 1.4;
+}
+.cat-card .check {
+position: absolute;
+top: 10px;
+right: 12px;
+font-size: 1.2rem;
+opacity: 0;
+transition: opacity 0.3s;
+}
+.cat-card.selected .check { opacity: 1; }
+
+/* ── BUTTONS ── */
+.btn {
+width: 100%;
+padding: 16px;
+border: none;
+border-radius: 50px;
+font-family: ‘DM Sans’, sans-serif;
+font-size: 1rem;
+font-weight: 500;
+cursor: pointer;
+letter-spacing: 0.5px;
+transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+position: relative;
+overflow: hidden;
+}
+.btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.btn:not(:disabled):hover { transform: translateY(-2px); }
+.btn:not(:disabled):active { transform: scale(0.97); }
+
+.btn-primary {
+background: linear-gradient(135deg, var(–royal), var(–sky));
+color: white;
+box-shadow: 0 8px 24px rgba(0,123,255,0.35);
+}
+.btn-primary:not(:disabled):hover { box-shadow: 0 12px 32px rgba(0,191,255,0.45); }
+
+.btn-naughty {
+background: linear-gradient(135deg, #c0392b, #e91e8c);
+color: white;
+box-shadow: 0 8px 24px rgba(233,30,140,0.35);
+}
+
+.btn-ghost {
+background: transparent;
+border: 1px solid rgba(199,204,214,0.3);
+color: var(–silver);
+}
+
+.btn-sm {
+width: auto;
+padding: 10px 24px;
+font-size: 0.85rem;
+}
+
+/* ── PLAYER TOGGLE ── */
+.player-toggle {
+display: flex;
+background: rgba(255,255,255,0.06);
+border-radius: 50px;
+padding: 5px;
+gap: 4px;
+width: 100%;
+margin-top: 8px;
+border: 1px solid rgba(255,255,255,0.08);
+}
+.player-btn {
+flex: 1;
+padding: 12px;
+border: none;
+border-radius: 50px;
+font-family: ‘DM Sans’, sans-serif;
+font-size: 0.95rem;
+font-weight: 500;
+cursor: pointer;
+transition: all 0.3s;
+background: transparent;
+color: var(–silver);
+}
+.player-btn.him.active {
+background: linear-gradient(135deg, #1a3a7a, #007BFF);
+color: white;
+box-shadow: 0 4px 16px rgba(0,123,255,0.4);
+}
+.player-btn.her.active {
+background: linear-gradient(135deg, #7a1a3a, var(–rose));
+color: white;
+box-shadow: 0 4px 16px rgba(255,107,157,0.4);
+}
+
+/* ── DICE ── */
+.dice-wrap {
+position: relative;
+width: 120px;
+height: 120px;
+margin: 16px auto;
+cursor: pointer;
+}
+.dice {
+width: 120px;
+height: 120px;
+border-radius: 24px;
+background: linear-gradient(145deg, #1a3a7a, #0a1e4a);
+border: 2px solid rgba(0,191,255,0.3);
+box-shadow: 0 0 40px rgba(0,123,255,0.25), inset 0 1px 0 rgba(255,255,255,0.1);
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 3.5rem;
+position: relative;
+transition: transform 0.1s;
+user-select: none;
+}
+.dice.her-mode {
+background: linear-gradient(145deg, #5a1a30, #2a0a18);
+border-color: rgba(255,107,157,0.4);
+box-shadow: 0 0 40px rgba(255,107,157,0.2), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+.dice.rolling {
+animation: rollDice 0.6s ease;
+}
+@keyframes rollDice {
+0%   { transform: rotate(0deg) scale(1); }
+20%  { transform: rotate(-15deg) scale(1.1); }
+40%  { transform: rotate(12deg) scale(0.95); }
+60%  { transform: rotate(-8deg) scale(1.08); }
+80%  { transform: rotate(5deg) scale(0.97); }
+100% { transform: rotate(0deg) scale(1); }
+}
+.dice-glow {
+position: absolute;
+inset: -15px;
+border-radius: 36px;
+background: radial-gradient(circle, rgba(0,191,255,0.15), transparent 70%);
+pointer-events: none;
+animation: pulse 2s infinite;
+}
+.dice-glow.her { background: radial-gradient(circle, rgba(255,107,157,0.15), transparent 70%); }
+@keyframes pulse {
+0%,100% { transform: scale(1); opacity: 0.6; }
+50%      { transform: scale(1.1); opacity: 1; }
+}
+
+/* ── TASK CARD ── */
+.task-card {
+width: 100%;
+border-radius: 24px;
+padding: 28px 24px;
+position: relative;
+overflow: hidden;
+margin-top: 4px;
+animation: cardPop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards;
+}
+@keyframes cardPop {
+from { opacity: 0; transform: scale(0.85) translateY(20px); }
+to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.task-card.him-card {
+background: linear-gradient(145deg, #0a2550, #0d3070);
+border: 1px solid rgba(0,191,255,0.3);
+box-shadow: 0 16px 48px rgba(0,123,255,0.25);
+}
+.task-card.her-card {
+background: linear-gradient(145deg, #3d0d28, #5a1a35);
+border: 1px solid rgba(255,107,157,0.3);
+box-shadow: 0 16px 48px rgba(255,107,157,0.2);
+}
+.task-card .shimmer {
+position: absolute;
+top: 0; left: -100%;
+width: 60%;
+height: 100%;
+background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+animation: shimmer 2s 0.3s forwards;
+}
+@keyframes shimmer {
+to { left: 150%; }
+}
+.task-number {
+font-size: 0.72rem;
+letter-spacing: 3px;
+text-transform: uppercase;
+margin-bottom: 12px;
+}
+.him-card .task-number { color: var(–sky); }
+.her-card .task-number { color: var(–rose); }
+
+.task-text {
+font-family: ‘Playfair Display’, serif;
+font-size: 1.35rem;
+line-height: 1.55;
+color: var(–white);
+}
+.task-player-badge {
+display: inline-flex;
+align-items: center;
+gap: 6px;
+margin-top: 16px;
+padding: 6px 14px;
+border-radius: 50px;
+font-size: 0.78rem;
+font-weight: 500;
+letter-spacing: 1px;
+text-transform: uppercase;
+}
+.him-card .task-player-badge { background: rgba(0,191,255,0.15); color: var(–sky); border: 1px solid rgba(0,191,255,0.2); }
+.her-card .task-player-badge { background: rgba(255,107,157,0.15); color: var(–rose); border: 1px solid rgba(255,107,157,0.2); }
+
+/* ── SCORE BADGE ── */
+.score-strip {
+display: flex;
+gap: 10px;
+width: 100%;
+margin-top: 8px;
+}
+.score-pill {
+flex: 1;
+padding: 10px;
+border-radius: 14px;
+text-align: center;
+background: rgba(255,255,255,0.04);
+border: 1px solid rgba(255,255,255,0.08);
+}
+.score-pill .score-label { font-size: 0.68rem; color: var(–silver); letter-spacing: 2px; text-transform: uppercase; }
+.score-pill .score-num { font-family: ‘Playfair Display’, serif; font-size: 1.6rem; color: var(–white); }
+.score-pill.him-pill { border-color: rgba(0,191,255,0.2); }
+.score-pill.him-pill .score-num { color: var(–sky); }
+.score-pill.her-pill { border-color: rgba(255,107,157,0.2); }
+.score-pill.her-pill .score-num { color: var(–rose); }
+
+/* ── MODE BADGE ── */
+.mode-badge {
+display: inline-flex;
+align-items: center;
+gap: 6px;
+padding: 6px 16px;
+border-radius: 50px;
+font-size: 0.75rem;
+letter-spacing: 2px;
+text-transform: uppercase;
+font-weight: 500;
+margin-top: 6px;
+}
+.mode-badge.friendly { background: rgba(0,191,255,0.12); color: var(–sky); border: 1px solid rgba(0,191,255,0.2); }
+.mode-badge.naughty  { background: rgba(255,107,157,0.12); color: var(–rose); border: 1px solid rgba(255,107,157,0.2); }
+
+/* ── DIVIDER ── */
+.divider {
+width: 100%;
+height: 1px;
+background: linear-gradient(90deg, transparent, rgba(199,204,214,0.15), transparent);
+margin: 4px 0;
+}
+
+/* ── TURN INDICATOR ── */
+.turn-label {
+font-size: 0.82rem;
+color: var(–silver);
+letter-spacing: 2px;
+text-transform: uppercase;
+text-align: center;
+margin-bottom: -8px;
+}
+.turn-name {
+font-family: ‘Playfair Display’, serif;
+font-size: 1.6rem;
+text-align: center;
+}
+.turn-name.him { color: var(–sky); }
+.turn-name.her { color: var(–rose); }
+
+/* ── ACTION STRIP ── */
+.action-row {
+display: flex;
+gap: 10px;
+width: 100%;
+}
+
+/* ── CONFETTI ── */
+.confetti-piece {
+position: fixed;
+width: 8px;
+height: 8px;
+border-radius: 2px;
+pointer-events: none;
+z-index: 999;
+animation: confettiFall var(–dur) ease-in forwards;
+}
+@keyframes confettiFall {
+0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+
+/* ── TOAST ── */
+.toast {
+position: fixed;
+bottom: 30px;
+left: 50%;
+transform: translateX(-50%) translateY(80px);
+background: rgba(10,30,70,0.95);
+border: 1px solid rgba(0,191,255,0.3);
+padding: 12px 24px;
+border-radius: 50px;
+font-size: 0.88rem;
+color: var(–white);
+transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+z-index: 100;
+white-space: nowrap;
+backdrop-filter: blur(10px);
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ── RESULT DICE FACES ── */
+.dice-result {
+font-size: 0.85rem;
+color: var(–silver);
+text-align: center;
+margin-top: -8px;
+}
+
+</style>
+</head>
+<body>
+
+<!-- Stars background -->
+
+<div class="stars" id="stars"></div>
+
+<div class="app">
+  <div class="logo">
+    <h1>Spark ✨</h1>
+    <p>Couples Challenge Game</p>
+  </div>
+
+  <!-- ══════════ SCREEN 1: CATEGORY SELECT ══════════ -->
+
+  <div class="screen active" id="screen-cat">
+    <p class="section-title" style="margin-top:28px">Choose Your Mode</p>
+    <p class="section-sub">Pick the vibe for tonight</p>
+
+<div class="cat-grid">
+  <div class="cat-card friendly" data-cat="friendly" onclick="selectCat(this)">
+    <span class="check">✓</span>
+    <span class="emoji">💙</span>
+    <div class="cat-name">Friendly</div>
+    <div class="cat-desc">Sweet, playful & romantic tasks</div>
+  </div>
+  <div class="cat-card naughty" data-cat="naughty" onclick="selectCat(this)">
+    <span class="check">🔥</span>
+    <span class="emoji">💋</span>
+    <div class="cat-name">Naughty</div>
+    <div class="cat-desc">Bold, spicy & daring tasks</div>
+  </div>
+</div>
+
+<button class="btn btn-primary" id="start-btn" disabled onclick="startGame()" style="margin-top:8px">
+  Let's Play →
+</button>
+<p style="font-size:0.75rem;color:rgba(199,204,214,0.5);text-align:center;margin-top:4px">
+  For adults 18+ in consensual relationships only
+</p>
+
+
+  </div>
+
+  <!-- ══════════ SCREEN 2: GAMEPLAY ══════════ -->
+
+  <div class="screen" id="screen-game">
+
+
+<div style="display:flex;align-items:center;justify-content:space-between;width:100%;margin-top:20px">
+  <div id="mode-badge-el" class="mode-badge friendly">💙 Friendly Mode</div>
+  <button class="btn btn-ghost btn-sm" onclick="resetGame()" style="width:auto;padding:8px 16px;font-size:0.78rem">
+    ← Change
+  </button>
+</div>
+
+<div class="score-strip">
+  <div class="score-pill him-pill">
+    <div class="score-label">👨 Him</div>
+    <div class="score-num" id="score-him">0</div>
+  </div>
+  <div class="score-pill her-pill">
+    <div class="score-label">👩 Her</div>
+    <div class="score-num" id="score-her">0</div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<p class="turn-label">Current Turn</p>
+<p class="turn-name him" id="turn-name">👨 His Turn</p>
+
+<div class="player-toggle">
+  <button class="player-btn him active" id="btn-him" onclick="setPlayer('him')">👨 Him</button>
+  <button class="player-btn her" id="btn-her" onclick="setPlayer('her')">👩 Her</button>
+</div>
+
+<div class="dice-wrap" onclick="rollDice()">
+  <div class="dice-glow" id="dice-glow"></div>
+  <div class="dice" id="dice">🎲</div>
+</div>
+<p class="dice-result" id="dice-result">Tap the dice to roll!</p>
+
+<div id="task-area" style="width:100%"></div>
+
+<div class="action-row" id="action-row" style="display:none">
+  <button class="btn btn-ghost" style="flex:1" onclick="skipTask()">Skip ✗</button>
+  <button class="btn btn-primary" style="flex:1" id="done-btn" onclick="doneTask()">Done ✓</button>
+</div>
+
+
+  </div>
+</div>
+
+<!-- Toast -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────
+const TASKS = {
+  friendly: {
+    him: [
+      "Give her a back massage for 2 minutes.",
+      "Carry her around the room like a princess.",
+      "Tell her 5 things you find sexy about her.",
+      "Make her laugh with your best joke.",
+      "Kiss her hands softly.",
+      "Do 20 push-ups while she sits on your back.",
+      "Let her pick what you wear next.",
+      "Give her a foot rub.",
+      "Cook her something quick and nice.",
+      "Sing to her (any song).",
+      "Give her a piggyback ride.",
+      "Compliment her in detail for 30 seconds.",
+      "Brush her hair gently.",
+      "Recreate your first date moment.",
+      "Hold her like you never want to let go.",
+      "Draw something cute on her arm.",
+      "Make her a cup of tea/coffee.",
+      "Tell her why she’s your favorite person.",
+      "Do a silly dance for her.",
+      "Let her sit on your lap while you watch something.",
+      "Kiss her nose, cheeks, and forehead.",
+      "Give her a long, warm hug.",
+      "Read her a romantic quote.",
+      "Play her favorite song and slow dance.",
+      "Tell her one thing you want to do with her in the future."
+    ],
+    her: [
+      "Give him a 30-second massage on his shoulders.",
+      "Sit on his lap and feed him something sweet.",
+      "Do a cute little dance for him.",
+      "Whisper 3 things you love about him in his ear.",
+      "Let him pick your outfit for the next hour.",
+      "Send him a cute selfie right now.",
+      "Hold his hand and tell him a funny memory of you two.",
+      "Give him a long hug and kiss on the forehead.",
+      "Make him a drink and serve it seductively.",
+      "Compliment his body in 5 different ways.",
+      "Play with his hair for 2 minutes.",
+      "Do 10 push-ups while he watches (or as many as you can).",
+      "Recreate your first kiss (soft version).",
+      "Let him tickle you for 20 seconds.",
+      "Cook or order his favorite snack.",
+      "Give him a foot massage.",
+      "Sing his favorite song (even badly).",
+      "Draw a heart on his chest with your finger.",
+      "Tell him one secret fantasy (mild).",
+      "Do a silly TikTok dance together.",
+      "Let him brush your hair.",
+      "Give him 5 slow kisses on the neck.",
+      "Make eye contact for 1 full minute without laughing.",
+      "Write 'I love you' on his body with lipstick.",
+      "Slow dance with him for one song."
+    ]
+  },
+  naughty: {
+    him: [
+      "Eat her pussy for 3 minutes straight.",
+      "Finger her while looking into her eyes.",
+      "Spank her ass hard 10 times.",
+      "Fuck her tits.",
+      "Choke her lightly while kissing her.",
+      "Tease her clit with your tongue until she begs.",
+      "Fuck her in doggy style for 2 minutes.",
+      "Make her squirt if possible.",
+      "Cum on her face or mouth.",
+      "Use a toy on her while she moans.",
+      "Pin her hands above her head and tease her.",
+      "Lick her from neck to pussy.",
+      "Fuck her against the wall.",
+      "Record a short video of you fingering her.",
+      "Slap her pussy lightly 5 times.",
+      "Make her ride your face.",
+      "Edge her with your fingers then stop.",
+      "Fuck her mouth gently but deep.",
+      "Suck on her nipples hard.",
+      "Put her in missionary and go slow & deep.",
+      "Use your cock to tease her entrance without entering.",
+      "Give her a hickey on her inner thigh.",
+      "Finger her ass while licking her clit.",
+      "Make her cum with just your fingers.",
+      "Fuck her hard and fast in any position she wants."
+    ],
+    her: [
+      "Strip slowly while he watches (one piece at a time).",
+      "Give him a lap dance for 60 seconds.",
+      "Suck on his fingers seductively.",
+      "Send him a nude selfie right now.",
+      "Touch yourself while he watches.",
+      "Whisper exactly what you want him to do to you.",
+      "Give him a blowjob for exactly 2 minutes (no finishing).",
+      "Ride his thigh until you’re wet.",
+      "Let him spank you 10 times.",
+      "Use your breasts to tease his cock.",
+      "Finger yourself and let him taste.",
+      "Deep kiss him while grinding on his lap.",
+      "Lick his neck and chest slowly.",
+      "Beg him to fuck you (use dirty words).",
+      "Sit on his face for 45 seconds.",
+      "Give him a handjob with lots of eye contact.",
+      "Let him tie your hands and tease you.",
+      "Moan his name loudly while touching yourself.",
+      "Kiss and lick down his entire body.",
+      "Use ice on his nipples and cock.",
+      "Send him a video of you masturbating.",
+      "Let him cum on your tits.",
+      "Do a naked twerk for him.",
+      "Edge him with your mouth for 3 minutes.",
+      "Ride him reverse cowgirl while he slaps your ass."
+    ]
+  }
+};
+
+
+const DICE_FACES = ['⚀','⚁','⚂','⚃','⚄','⚅'];
+
+// ── STATE ─────────────────────────────────────────────────────
+let selectedCat = null;
+let currentPlayer = 'him';
+let scores = { him: 0, her: 0 };
+let usedTasks = { friendly: { him: [], her: [] }, naughty: { him: [], her: [] } };
+let rolling = false;
+let currentTaskIndex = null;
+
+// ── STARS ─────────────────────────────────────────────────────
+function initStars() {
+  const c = document.getElementById('stars');
+  for (let i = 0; i < 80; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const size = Math.random() * 2.5 + 0.5;
+    s.style.cssText = `
+      width:${size}px;height:${size}px;
+      left:${Math.random()*100}%;
+      top:${Math.random()*100}%;
+      --d:${(Math.random()*4+2).toFixed(1)}s;
+      --op:${(Math.random()*0.6+0.2).toFixed(2)};
+      animation-delay:${(Math.random()*5).toFixed(1)}s;
+    `;
+    c.appendChild(s);
+  }
+}
+
+// ── CATEGORY SELECT ───────────────────────────────────────────
+function selectCat(el) {
+  document.querySelectorAll('.cat-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedCat = el.dataset.cat;
+  document.getElementById('start-btn').disabled = false;
+  const btn = document.getElementById('start-btn');
+  if (selectedCat === 'naughty') {
+    btn.className = 'btn btn-naughty';
+    btn.textContent = 'Let\'s Get Naughty 🔥';
+  } else {
+    btn.className = 'btn btn-primary';
+    btn.textContent = 'Let\'s Play →';
+  }
+}
+
+function startGame() {
+  showScreen('screen-game');
+  const badge = document.getElementById('mode-badge-el');
+  if (selectedCat === 'naughty') {
+    badge.className = 'mode-badge naughty';
+    badge.innerHTML = '🔥 Naughty Mode';
+    document.getElementById('done-btn').className = 'btn btn-naughty';
+    document.getElementById('done-btn').style.flex = '1';
+  } else {
+    badge.className = 'mode-badge friendly';
+    badge.innerHTML = '💙 Friendly Mode';
+  }
+  setPlayer('him');
+}
+
+// ── PLAYER ────────────────────────────────────────────────────
+function setPlayer(p) {
+  currentPlayer = p;
+  document.getElementById('btn-him').classList.toggle('active', p === 'him');
+  document.getElementById('btn-her').classList.toggle('active', p === 'her');
+  const tn = document.getElementById('turn-name');
+  if (p === 'him') {
+    tn.textContent = '👨 His Turn';
+    tn.className = 'turn-name him';
+    document.getElementById('dice').className = 'dice';
+    document.getElementById('dice-glow').className = 'dice-glow';
+  } else {
+    tn.textContent = '👩 Her Turn';
+    tn.className = 'turn-name her';
+    document.getElementById('dice').className = 'dice her-mode';
+    document.getElementById('dice-glow').className = 'dice-glow her';
+  }
+  // Clear task
+  document.getElementById('task-area').innerHTML = '';
+  document.getElementById('action-row').style.display = 'none';
+  document.getElementById('dice').textContent = '🎲';
+  document.getElementById('dice-result').textContent = 'Tap the dice to roll!';
+}
+
+// ── ROLL ──────────────────────────────────────────────────────
+function rollDice() {
+  if (rolling) return;
+  rolling = true;
+  const dice = document.getElementById('dice');
+  const taskArea = document.getElementById('task-area');
+  const actionRow = document.getElementById('action-row');
+
+  taskArea.innerHTML = '';
+  actionRow.style.display = 'none';
+  dice.classList.add('rolling');
+
+  let count = 0;
+  const interval = setInterval(() => {
+    dice.textContent = DICE_FACES[Math.floor(Math.random() * 6)];
+    count++;
+  }, 80);
+
+  setTimeout(() => {
+    clearInterval(interval);
+    const roll = Math.floor(Math.random() * 6) + 1;
+    dice.textContent = DICE_FACES[roll - 1];
+    dice.classList.remove('rolling');
+    document.getElementById('dice-result').textContent = `Rolled a ${roll}!`;
+    rolling = false;
+    showTask();
+  }, 700);
+}
+
+// ── TASK ──────────────────────────────────────────────────────
+function showTask() {
+  const pool = TASKS[selectedCat][currentPlayer];
+  const used = usedTasks[selectedCat][currentPlayer];
+
+  if (used.length >= pool.length) {
+    usedTasks[selectedCat][currentPlayer] = [];
+    showToast('🔄 Tasks reset — going again!');
+  }
+
+  const available = pool.map((_, i) => i).filter(i => !usedTasks[selectedCat][currentPlayer].includes(i));
+  currentTaskIndex = available[Math.floor(Math.random() * available.length)];
+  usedTasks[selectedCat][currentPlayer].push(currentTaskIndex);
+
+  const task = pool[currentTaskIndex];
+  const isHer = currentPlayer === 'her';
+  const cardClass = isHer ? 'her-card' : 'him-card';
+  const badge = isHer ? '👩 Her Task' : '👨 His Task';
+  const num = currentTaskIndex + 1;
+
+  const html = `
+    <div class="task-card ${cardClass}">
+      <div class="shimmer"></div>
+      <div class="task-number">Task #${num} of 25</div>
+      <div class="task-text">${task}</div>
+      <div class="task-player-badge">${badge}</div>
+    </div>
+  `;
+
+  const ta = document.getElementById('task-area');
+  ta.innerHTML = html;
+  document.getElementById('action-row').style.display = 'flex';
+  ta.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ── DONE / SKIP ───────────────────────────────────────────────
+function doneTask() {
+  scores[currentPlayer]++;
+  document.getElementById(`score-${currentPlayer}`).textContent = scores[currentPlayer];
+  confetti();
+  showToast(currentPlayer === 'him' ? '👨 He did it! +1 point' : '👩 She did it! +1 point');
+  switchTurn();
+}
+
+function skipTask() {
+  showToast('Skipped — no point 😅');
+  switchTurn();
+}
+
+function switchTurn() {
+  setTimeout(() => {
+    const next = currentPlayer === 'him' ? 'her' : 'him';
+    setPlayer(next);
+  }, 600);
+}
+
+// ── CONFETTI ──────────────────────────────────────────────────
+function confetti() {
+  const colors = ['#007BFF','#00BFFF','#F5C842','#FF6B9D','#ffffff'];
+  for (let i = 0; i < 28; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    el.style.cssText = `
+      left:${20 + Math.random()*60}%;
+      top:${-10}px;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      --dur:${(Math.random()*1.2+0.8).toFixed(2)}s;
+      animation-delay:${(Math.random()*0.4).toFixed(2)}s;
+      width:${Math.random()*8+4}px;
+      height:${Math.random()*8+4}px;
+      border-radius:${Math.random()>0.5?'50%':'2px'};
+    `;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 2400);
+  }
+}
+
+// ── TOAST ─────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ── RESET ─────────────────────────────────────────────────────
+function resetGame() {
+  selectedCat = null;
+  currentPlayer = 'him';
+  scores = { him: 0, her: 0 };
+  usedTasks = { friendly: { him: [], her: [] }, naughty: { him: [], her: [] } };
+  document.querySelectorAll('.cat-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('start-btn').disabled = true;
+  document.getElementById('start-btn').className = 'btn btn-primary';
+  document.getElementById('start-btn').textContent = "Let's Play →";
+  showScreen('screen-cat');
+}
+
+// ── SCREEN SWITCH ─────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ── INIT ──────────────────────────────────────────────────────
+initStars();
+</script>
+
+</body>
+</html>
