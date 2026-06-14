@@ -118,7 +118,7 @@ flying-kings/
 | Offline/PWA | Service Worker + Web App Manifest |
 | Fonts | Google Fonts — Inter |
 | Audio | Web Audio API (no external library) |
-| Hosting | Netlify (recommended) |
+| Hosting | Vercel (recommended) |
 | AI engine | Minimax with alpha-beta pruning |
 
 ---
@@ -184,7 +184,6 @@ The computer opponent uses the **Minimax algorithm with alpha-beta pruning**:
 --green:     #22c55e   /* Turn indicator / success */
 --text:      #eef0f8   /* Primary text */
 --text-dim:  #60657e   /* Muted text */
-```
 
 ---
 
@@ -224,8 +223,7 @@ The computer opponent uses the **Minimax algorithm with alpha-beta pruning**:
 ---
 
 ## 👤 Author
-
-Built with vanilla HTML/CSS/JS and a lot of ♛ energy.  
+Built by HoblemercyTech with vanilla HTML/CSS/JS and a lot of ♛ energy.  
 Coded on **SPCK Editor** (iOS) — no laptop required.
 
 ---
